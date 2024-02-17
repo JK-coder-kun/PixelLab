@@ -1,0 +1,157 @@
+# depslib dependency file v1.0
+1708099299 source:d:\opengl\pixellab\main.cpp
+	"imgui/imgui.h"
+	"imgui/imgui_impl_glfw_gl3.h"
+	<stdio.h>
+	<GL/glew.h>
+	<GLFW/glfw3.h>
+	"shader/shader_s.h"
+	"Texture.h"
+	<iostream>
+	<windows.h>
+	<commdlg.h>
+	"fileDialog.h"
+
+1708086822 source:d:\opengl\pixellab\imgui\imgui.cpp
+	"imgui.h"
+	"imgui_internal.h"
+	<ctype.h>
+	<stdlib.h>
+	<stdio.h>
+	<stddef.h>
+	<stdint.h>
+	"stb_textedit.h"
+	<Windows.h>
+	<windows.h>
+	<imm.h>
+	"imgui_user.inl"
+
+1708091462 d:\opengl\pixellab\imgui\imgui.h
+	"imconfig.h"
+	<float.h>
+	<stdarg.h>
+	<stddef.h>
+	<string.h>
+	<assert.h>
+	"imgui_user.h"
+
+1708086822 d:\opengl\pixellab\imgui\imconfig.h
+
+1708086822 d:\opengl\pixellab\imgui\imgui_internal.h
+	<stdio.h>
+	<math.h>
+	<limits.h>
+	"stb_textedit.h"
+
+1708086822 d:\opengl\pixellab\imgui\stb_textedit.h
+	<string.h>
+
+1708086822 source:d:\opengl\pixellab\imgui\imgui_demo.cpp
+	"imgui.h"
+	<ctype.h>
+	<math.h>
+	<stdio.h>
+	<stdlib.h>
+	<stddef.h>
+	<stdint.h>
+
+1708086822 source:d:\opengl\pixellab\imgui\imgui_draw.cpp
+	"imgui.h"
+	"imgui_internal.h"
+	<stdio.h>
+	<malloc.h>
+	<alloca.h>
+	<stdlib.h>
+	"stb_rect_pack.h"
+	"stb_truetype.h"
+
+1708086822 d:\opengl\pixellab\imgui\stb_rect_pack.h
+	<stdlib.h>
+	<assert.h>
+
+1708086822 d:\opengl\pixellab\imgui\stb_truetype.h
+	"stb_truetype.h"
+	<stdio.h>
+	"stb_truetype.h"
+	<math.h>
+	<math.h>
+	<math.h>
+	<math.h>
+	<math.h>
+	<stdlib.h>
+	<assert.h>
+	<string.h>
+	<string.h>
+
+1708087076 source:d:\opengl\pixellab\imgui\imgui_impl_glfw_gl3.cpp
+	"imgui.h"
+	"imgui_impl_glfw_gl3.h"
+	<GL/glew.h>
+	<GLFW/glfw3.h>
+	<GLFW/glfw3native.h>
+
+1708086828 d:\opengl\pixellab\imgui\imgui_impl_glfw_gl3.h
+
+1707543175 source:d:\opengl\pixellab\texture.cpp
+	"Texture.h"
+	"stb_image.h"
+	"stb_image_write.h"
+
+1708098789 d:\opengl\pixellab\texture.h
+	<string>
+	"Texture.h"
+	<GL/glew.h>
+	<GLFW/glfw3.h>
+	<iostream>
+
+1708095644 d:\opengl\pixellab\glad\glad.h
+	<KHR/khrplatform.h>
+
+1707382088 d:\opengl\pixellab\stb_image.h
+	"stb_image.h"
+	<stdio.h>
+	<stdlib.h>
+	<stdarg.h>
+	<stddef.h>
+	<stdlib.h>
+	<string.h>
+	<limits.h>
+	<math.h>
+	<stdio.h>
+	<assert.h>
+	<stdint.h>
+	<emmintrin.h>
+	<intrin.h>
+	<arm_neon.h>
+
+1707538656 d:\opengl\pixellab\stb_image_write.h
+	<stdlib.h>
+	<stdio.h>
+	<stdarg.h>
+	<stdlib.h>
+	<string.h>
+	<math.h>
+	<assert.h>
+
+1707367284 source:d:\opengl\pixellab\glad\glad.c
+	<stdio.h>
+	<stdlib.h>
+	<string.h>
+	<glad/glad.h>
+	<windows.h>
+	<winapifamily.h>
+	<dlfcn.h>
+
+1708098693 d:\opengl\pixellab\shader\shader_s.h
+	<GL/glew.h>
+	<string>
+	<fstream>
+	<sstream>
+	<iostream>
+
+1707578746 d:\opengl\pixellab\filedialog.h
+	<Windows.h>
+	<commdlg.h>
+	<iostream>
+	<string>
+
