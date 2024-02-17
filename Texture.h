@@ -14,9 +14,10 @@ private:
     unsigned char* localBuffer;
     int width, height, BPP;
 public:
-    Texture(const std::string& path);
+    Texture();
     ~Texture();
 
+    void LoadTexture(const std:: string& path);
     void Bind(unsigned int slot=0);
     void Unbind() const;
 

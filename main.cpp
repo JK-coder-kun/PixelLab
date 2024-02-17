@@ -14,13 +14,26 @@
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow *window);
+void setRenderCoordinate(int width, int height);
 
 // settings
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
 
-static int returnmenu, returnsubmenu, submenucolor1, submenucolor2,
-value = 0;
+// set up vertex data (and buffer(s)) and configure vertex attributes
+// ------------------------------------------------------------------
+float vertices[] = {
+        // positions          // colors           // texture coords
+         0.5f,  0.5f, 0.0f,   1.0f, 0.0f, 0.0f,   1.0f, 1.0f, // top right
+         0.5f, -0.5f, 0.0f,   0.0f, 1.0f, 0.0f,   1.0f, 0.0f, // bottom right
+        -0.5f, -0.5f, 0.0f,   0.0f, 0.0f, 1.0f,   0.0f, 0.0f, // bottom left
+        -0.5f,  0.5f, 0.0f,   1.0f, 1.0f, 0.0f,   0.0f, 1.0f  // top left
+};
+
+//for debug
+string texWidth,texHeight;
+string texdimension;
+
 
 int main()
 {
@@ -62,20 +75,16 @@ int main()
     bool show_another_window = false;
     ImVec4 clear_color = ImVec4(0.2f, 0.3f, 0.3f, 1.0f);
 
+    string imgPath;
+    bool textureActive, newTextureSet;
+    Texture texture;
+
 
     // build and compile our shader zprogram
     // ------------------------------------
     Shader ourShader("./shader/shader.vert", "./shader/shader.frag");
 
-    // set up vertex data (and buffer(s)) and configure vertex attributes
-    // ------------------------------------------------------------------
-    float vertices[] = {
-        // positions          // colors           // texture coords
-         0.5f,  0.5f, 0.0f,   1.0f, 0.0f, 0.0f,   1.0f, 1.0f, // top right
-         0.5f, -0.5f, 0.0f,   0.0f, 1.0f, 0.0f,   1.0f, 0.0f, // bottom right
-        -0.5f, -0.5f, 0.0f,   0.0f, 0.0f, 1.0f,   0.0f, 0.0f, // bottom left
-        -0.5f,  0.5f, 0.0f,   1.0f, 1.0f, 0.0f,   0.0f, 1.0f  // top left
-    };
+
     unsigned int indices[] = {
         0, 1, 3, // first triangle
         1, 2, 3  // second triangle
@@ -106,8 +115,8 @@ int main()
 
     // load and create a texture
     // -------------------------
-    string path = openFileDialog();
-    Texture texture(path);
+    //string path = openFileDialog();
+    //Texture texture(path);
 
     // tell opengl for each sampler to which texture unit it belongs to (only has to be done once)
     // -------------------------------------------------------------------------------------------
@@ -122,26 +131,49 @@ int main()
 
         // 1. Show a simple window.
         // Tip: if we don't call ImGui::Begin()/ImGui::End() the widgets automatically appears in a window called "Debug".
-        {
+        {   ImGui::Begin("Menu");
+            ImGui::SetWindowPos(ImVec2(10,10),ImGuiCond_FirstUseEver);
             static float f = 0.5f;
-            static int counter = 0;
-            ImGui::Text("Hello, world!");                           // Display some text (you can use a format string too)
+            ImGui::Text("Welcome to Pixel Lab!");                           // Display some text (you can use a format string too)
+            if(ImGui::Button("Load Image"))
+            {
+                newTextureSet = true;
+                textureActive = true;
+            }
             ImGui::SliderFloat("float", &f, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
             ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
 
-            ImGui::Checkbox("Demo Window", &show_demo_window);      // Edit bools storing our windows open/close state
-            ImGui::Checkbox("Another Window", &show_another_window);
 
-            if (ImGui::Button("Button"))                            // Buttons return true when clicked (NB: most widgets return true when edited/activated)
-                counter++;
-            ImGui::SameLine();
-            ImGui::Text("counter = %d", counter);
-
-            ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+            if(ImGui::Button("Save"))
+            {
+                char szFile[MAX_PATH] = {0};
+                if(saveFileDialog(szFile))
+                {
+                    string path = convertToString(szFile, MAX_PATH) + ".png";
+                    bool success = Texture::SaveAsImage(path);
+                    if(!success) std::cout<<"Unable to save image"<<std::endl;
+                    else std::cout<<"Image has been saved!"<<std::endl;
+                }else std::cout<<"No path was given to save!"<<std::endl;
+            }
 
             if(ImGui::Button("Exit"))
                 glfwSetWindowShouldClose(window, true);
+
+            ImGui::End();
         }
+
+        //load and create a texture
+        if(newTextureSet)
+        {
+            int windowWidth, windowHeight;
+            imgPath = openFileDialog();
+            texture.LoadTexture(imgPath);
+            setRenderCoordinate(texture.GetWidth(), texture.GetHeight());
+            glBindBuffer(GL_ARRAY_BUFFER, VBO);
+            glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+            newTextureSet = false;
+        }
+
         // input
         // -----
         processInput(window);
@@ -151,12 +183,18 @@ int main()
         glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        // bind textures on corresponding texture units
-        texture.Bind();
+        if(textureActive)
+        {
+            // bind textures on corresponding texture units
+            texture.Bind();
+        }
+
 
         // render container
         ourShader.use();
         glBindVertexArray(VAO);
+
+
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
         ImGui::Render();
@@ -180,6 +218,42 @@ int main()
     // ------------------------------------------------------------------
     glfwTerminate();
     return 0;
+}
+
+//set coordinate to match image ratio
+void setRenderCoordinate(int width, int height)
+{
+    float initialCoord[] = {
+        // positions          // colors           // texture coords
+         0.6f,  0.6f, 0.0f,   1.0f, 0.0f, 0.0f,   1.0f, 1.0f, // top right
+         0.6f, -0.6f, 0.0f,   0.0f, 1.0f, 0.0f,   1.0f, 0.0f, // bottom right
+        -0.6f, -0.6f, 0.0f,   0.0f, 0.0f, 1.0f,   0.0f, 0.0f, // bottom left
+        -0.6f,  0.6f, 0.0f,   1.0f, 1.0f, 0.0f,   0.0f, 1.0f  // top left
+    };
+    std::copy(initialCoord, initialCoord+sizeof(initialCoord)/sizeof(initialCoord[0]), vertices);
+    if(width >= height)
+    {
+        float hwRatio = (float)1.2f * ((float)height/(float)width);
+        std::cout<<"width: "<<width<<", height: "<<height<<", hwRatio: "<<hwRatio/1.2f<<std::endl;
+
+        vertices[1]=0 + hwRatio/2;
+        vertices[25]=vertices[1];
+        vertices[9]= 0 - hwRatio/2;
+        vertices[17] = vertices[9];
+        std::cout<<"width: "<<(vertices[0]-vertices[16])<<", height: "<<(vertices[1]-vertices[9])<<", hwRatio: "<<(vertices[1]-vertices[9])/(vertices[0]-vertices[16])<<std::endl;
+
+
+    }else
+    {
+        float whRatio = (float)1.2f *((float)width/(float)height);
+        std::cout<<"width: "<<width<<", height: "<<height<<", whRatio: "<<whRatio/1.2f<<std::endl;
+        vertices[0] = 0 + whRatio/2;
+        vertices[8] = vertices[0];
+        vertices[16]= 0 - whRatio/2;
+        vertices[24]= vertices[16];
+        std::cout<<"width: "<<(vertices[0]-vertices[16])<<", height: "<<(vertices[1]-vertices[9])<<", whRatio: "<<(vertices[0]-vertices[16])/(vertices[1]-vertices[9])<<std::endl;
+
+    }
 }
 
 // process all input: query GLFW whether relevant keys are pressed/released this frame and react accordingly

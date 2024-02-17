@@ -3,11 +3,20 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image.h"
 #include "stb_image_write.h"
-Texture::Texture(const std::string& path)
-:ID(0), m_FilePath(path), localBuffer(nullptr), width(0), height(0), BPP(0)
+#include <iostream>
+Texture::Texture()
+:ID(0), localBuffer(nullptr), width(0), height(0), BPP(0)
 {
 
+}
 
+Texture::~Texture()
+{
+    glDeleteTextures(1,&ID);
+}
+
+void Texture::LoadTexture(const std::string& path)
+{
     stbi_set_flip_vertically_on_load(1); //openGL start from the bottom left and png format start from the top left that is why
 
     /*int format = GL_RGB;
@@ -45,13 +54,6 @@ Texture::Texture(const std::string& path)
     }
 
     stbi_image_free(localBuffer);
-
-
-}
-
-Texture::~Texture()
-{
-    glDeleteTextures(1,&ID);
 }
 
 bool Texture::SaveAsImage(std::string filename)
