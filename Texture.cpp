@@ -19,17 +19,6 @@ void Texture::LoadTexture(const std::string& path)
 {
     stbi_set_flip_vertically_on_load(1); //openGL start from the bottom left and png format start from the top left that is why
 
-    /*int format = GL_RGB;
-    int internalFormat = GL_RGB;
-    if(path.find(".png") != std::string::npos)
-    {
-        format = GL_RGBA;
-        internalFormat = GL_RGBA;
-    }else if(path.find(".gif") != std::string::npos)
-        {
-            format = GL_RGB12;
-            internalFormat = GL_RGB10;
-        }*/
     localBuffer = stbi_load(path.c_str(), &width, &height, &BPP, 4);    //To load an image as a 4-channel RGBA image
     //int format = BPP == 24 ? GL_BGR : BPP == 8 ? GL_LUMINANCE : 0;
 	//int internalFormat = BPP == 24 ? GL_RGB : GL_DEPTH_COMPONENT;

@@ -1,8 +1,7 @@
 # depslib dependency file v1.0
-1708185985 source:d:\opengl\pixellab\main.cpp
+1708275949 source:d:\opengl\pixellab\main.cpp
 	"imgui/imgui.h"
 	"imgui/imgui_impl_glfw_gl3.h"
-	<stdio.h>
 	<GL/glew.h>
 	<GLFW/glfw3.h>
 	"shader/shader_s.h"
@@ -92,7 +91,7 @@
 
 1708086828 d:\opengl\pixellab\imgui\imgui_impl_glfw_gl3.h
 
-1708183684 source:d:\opengl\pixellab\texture.cpp
+1708275251 source:d:\opengl\pixellab\texture.cpp
 	"Texture.h"
 	"stb_image.h"
 	"stb_image_write.h"

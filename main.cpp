@@ -1,6 +1,6 @@
 #include "imgui/imgui.h"
 #include "imgui/imgui_impl_glfw_gl3.h"
-#include <stdio.h>
+//#include <stdio.h>
 //#include "glad/glad.h"
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
@@ -20,6 +20,13 @@ void setRenderCoordinate(int width, int height);
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
 
+unsigned int windowWidth = SCR_WIDTH;
+unsigned int windowHeight = SCR_HEIGHT;
+
+string imgPath;
+bool textureActive, newTextureSet, windowResize = false;
+Texture texture;
+
 // set up vertex data (and buffer(s)) and configure vertex attributes
 // ------------------------------------------------------------------
 float vertices[] = {
@@ -29,6 +36,8 @@ float vertices[] = {
         -0.5f, -0.5f, 0.0f,   0.0f, 0.0f, 1.0f,   0.0f, 0.0f, // bottom left
         -0.5f,  0.5f, 0.0f,   1.0f, 1.0f, 0.0f,   0.0f, 1.0f  // top left
 };
+
+unsigned int VBO, VAO, EBO;
 
 //for debug
 string texWidth,texHeight;
@@ -75,9 +84,9 @@ int main()
     bool show_another_window = false;
     ImVec4 clear_color = ImVec4(0.2f, 0.3f, 0.3f, 1.0f);
 
-    string imgPath;
-    bool textureActive, newTextureSet;
-    Texture texture;
+    //string imgPath;
+    //bool textureActive, newTextureSet;
+    //Texture texture;
 
 
     // build and compile our shader zprogram
@@ -165,13 +174,21 @@ int main()
         //load and create a texture
         if(newTextureSet)
         {
-            int windowWidth, windowHeight;
             imgPath = openFileDialog();
             texture.LoadTexture(imgPath);
             setRenderCoordinate(texture.GetWidth(), texture.GetHeight());
             glBindBuffer(GL_ARRAY_BUFFER, VBO);
             glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
             newTextureSet = false;
+        }
+
+
+        if(textureActive && windowResize)
+        {
+            setRenderCoordinate(texture.GetWidth(), texture.GetHeight());
+            glBindBuffer(GL_ARRAY_BUFFER, VBO);
+            glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+            windowResize = false;
         }
 
         // input
@@ -233,9 +250,10 @@ void setRenderCoordinate(int width, int height)
     std::copy(initialCoord, initialCoord+sizeof(initialCoord)/sizeof(initialCoord[0]), vertices);
     if(width >= height)
     {
-        float hwRatio = (float)1.2f * ((float)height/(float)width);
+        float winHWRatio = (float)windowWidth/(float)windowHeight;
+        float hwRatio = (float)1.2f * winHWRatio* ((float)height/(float)width);
+        std::cout<<"WinHW: "<<winHWRatio<<std::endl;
         std::cout<<"width: "<<width<<", height: "<<height<<", hwRatio: "<<hwRatio/1.2f<<std::endl;
-
         vertices[1]=0 + hwRatio/2;
         vertices[25]=vertices[1];
         vertices[9]= 0 - hwRatio/2;
@@ -245,7 +263,9 @@ void setRenderCoordinate(int width, int height)
 
     }else
     {
-        float whRatio = (float)1.2f *((float)width/(float)height);
+        float winWHRatio = (float)windowHeight/(float)windowWidth;
+        float whRatio = (float)1.2f * winWHRatio*((float)width/(float)height);
+        std::cout<<"WinWH: "<<winWHRatio<<std::endl;
         std::cout<<"width: "<<width<<", height: "<<height<<", whRatio: "<<whRatio/1.2f<<std::endl;
         vertices[0] = 0 + whRatio/2;
         vertices[8] = vertices[0];
@@ -281,6 +301,10 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
     // make sure the viewport matches the new window dimensions; note that width and
     // height will be significantly larger than specified on retina displays.
     glViewport(0, 0, width, height);
+    windowWidth = width;
+    windowHeight = height;
+    windowResize = true;
+
 }
 
 
