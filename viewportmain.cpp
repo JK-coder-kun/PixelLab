@@ -1,3 +1,4 @@
+
 #include "imgui/imgui.h"
 #include "imgui/imgui_impl_glfw_gl3.h"
 //#include <stdio.h>
@@ -124,19 +125,58 @@ int main()
 
 
     // tell opengl for each sampler to which texture unit it belongs to (only has to be done once)
-    // -------------------------------------------------------------------------------------------
-    ourShader.use(); // don't forget to activate/use the shader before setting uniforms!
-    //ourShader.setFloat("intensity", intensity);
+    ourShader.use();
 
+    unsigned int fbo,fbo_texture;
+    glGenFramebuffers(1,&fbo);
+    glBindFramebuffer(GL_FRAMEBUFFER,fbo);
+    glGenTextures(1, &fbo_texture); // Generate one texture
+    glBindTexture(GL_TEXTURE_2D, fbo_texture); // Bind the texture fbo_texture
+
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, windowWidth, windowHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL); // Create a standard texture with the width and height of our window
+
+    // Setup the basic texture parameters
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+
+    glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, fbo_texture, 0); // Attach the texture fbo_texture to the color buffer in our frame buffer
+    glBindFramebuffer(GL_FRAMEBUFFER,0);
 
     // render loop
     // -----------
     while (!glfwWindowShouldClose(window))
     {
+        // input
+        processInput(window);
+
+        // render
+        glBindFramebuffer(GL_FRAMEBUFFER,fbo);
+        glViewport(0,0,texture.GetWidth(),texture.GetHeight());
+        glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
+        glClear(GL_COLOR_BUFFER_BIT);
+
+        if(textureActive)texture.Bind();
+
+        // render container
+        ourShader.use();
+        ourShader.setFloat("greyIntensity", greyIntensity);
+        ourShader.setFloat("pixelBlocks", pixelBlocks);
+
+        glBindVertexArray(VAO);
+
+
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
+
+        glBindFramebuffer(GL_FRAMEBUFFER,0);
+        glViewport(0,0,windowWidth,windowHeight);
+        glClearColor(1.0f,1.0f,1.0f,1.0f);
+        glClear(GL_COLOR_BUFFER_BIT);
+
         ImGui_ImplGlfwGL3_NewFrame();
 
-        // 1. Show a simple window.
-        // Tip: if we don't call ImGui::Begin()/ImGui::End() the widgets automatically appears in a window called "Debug".
         {   ImGui::Begin("Menu");
             ImGui::SetWindowPos(ImVec2(10,10),ImGuiCond_FirstUseEver);
             ImGui::Text("Welcome to Pixel Lab!");                           // Display some text (you can use a format string too)
@@ -158,9 +198,11 @@ int main()
                 if(saveFileDialog(szFile))
                 {
                     string path = convertToString(szFile, MAX_PATH) + ".png";
+                    glBindFramebuffer(GL_FRAMEBUFFER,fbo);
                     bool success = Texture::SaveAsImage(path,vertices[24],vertices[25],texture.GetWidth(), texture.GetHeight());
                     if(!success) std::cout<<"Unable to save image"<<std::endl;
                     else std::cout<<"Image has been saved!"<<std::endl;
+                    glBindFramebuffer(GL_FRAMEBUFFER,0);
                 }else std::cout<<"No path was given to save!"<<std::endl;
             }
 
@@ -191,43 +233,18 @@ int main()
             windowResize = false;
         }
 
-        // input
-        // -----
-        processInput(window);
-
-        // render
-        // ------
-        glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
-        glClear(GL_COLOR_BUFFER_BIT);
-
-        if(textureActive)
-        {
-            // bind textures on corresponding texture units
-            texture.Bind();
-        }
-
-
-        // render container
-        ourShader.use();
-        ourShader.setFloat("greyIntensity", greyIntensity);
-        ourShader.setFloat("pixelBlocks", pixelBlocks);
-
-        glBindVertexArray(VAO);
-
-
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
 
         ImGui::Render();
         ImGui_ImplGlfwGL3_RenderDrawData(ImGui::GetDrawData());
 
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
-        // -------------------------------------------------------------------------------
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
 
     // optional: de-allocate all resources once they've outlived their purpose:
-    // ------------------------------------------------------------------------
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
     glDeleteBuffers(1, &EBO);
@@ -235,7 +252,6 @@ int main()
     ImGui_ImplGlfwGL3_Shutdown();
     ImGui::DestroyContext();
     // glfw: terminate, clearing all previously allocated GLFW resources.
-    // ------------------------------------------------------------------
     glfwTerminate();
     return 0;
 }
@@ -280,7 +296,6 @@ void setRenderCoordinate(int width, int height)
 }
 
 // process all input: query GLFW whether relevant keys are pressed/released this frame and react accordingly
-// ---------------------------------------------------------------------------------------------------------
 void processInput(GLFWwindow *window)
 {
     if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
@@ -298,7 +313,6 @@ void processInput(GLFWwindow *window)
 }
 
 // glfw: whenever the window size changed (by OS or user resize) this callback function executes
-// ---------------------------------------------------------------------------------------------
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
     // make sure the viewport matches the new window dimensions; note that width and

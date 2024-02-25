@@ -29,8 +29,10 @@ void Texture::LoadTexture(const std::string& path)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);	// set texture wrapping to GL_REPEAT (default wrapping method)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
     // set texture filtering parameters
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_CLAMP_TO_EDGE);
+    //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_CLAMP_TO_EDGE);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
     if (localBuffer)
     {
@@ -45,6 +47,7 @@ void Texture::LoadTexture(const std::string& path)
     stbi_image_free(localBuffer);
 }
 
+/*
 bool Texture::SaveAsImage(std::string filename)
 {
     int width, height;
@@ -56,6 +59,7 @@ bool Texture::SaveAsImage(std::string filename)
     stbi_flip_vertically_on_write(1);
     stbi_write_png(  filename.c_str(), width, height, 4, pixels, 0);
     free(pixels);
+    return true;
         /*int width, height;
         glfwGetFramebufferSize(window, &width, &height);
         unsigned char* ptr = (unsigned char*)malloc(width * height * 4);
@@ -64,7 +68,18 @@ bool Texture::SaveAsImage(std::string filename)
         free(ptr);*/
 
 
-        return true;
+
+//} */
+
+bool Texture::SaveAsImage(std::string filename,int startX, int startY, int width, int height)
+{
+    //glfwGetFramebufferSize(window, &width, &height);
+    unsigned char* ptr = (unsigned char*)malloc(width * height * 4);
+    glReadPixels(startX, startY, width, height, GL_RGBA,  GL_UNSIGNED_BYTE, ptr);
+    stbi_flip_vertically_on_write(1);
+    stbi_write_png( filename.c_str(), width, height, 4, ptr, 0);
+    free(ptr);
+    return true;
 }
 
 void Texture::Bind(unsigned int slot)

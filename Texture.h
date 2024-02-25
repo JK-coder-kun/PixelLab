@@ -8,7 +8,7 @@
 
 class Texture
 {
-private:
+public:
     unsigned int ID;
     std::string m_FilePath;
     unsigned char* localBuffer;
@@ -24,5 +24,5 @@ public:
     inline int GetWidth() const {   return width; }
     inline int GetHeight() const {   return height; }
 
-    static bool SaveAsImage(std::string filename);
+    static bool SaveAsImage(std::string filename,int startX, int startY, int width, int height);
 };
