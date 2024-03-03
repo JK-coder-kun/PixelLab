@@ -1,7 +1,8 @@
 # depslib dependency file v1.0
-1708856741 source:d:\opengl\pixellab\main.cpp
+1709466082 source:d:\opengl\pixellab\main.cpp
 	"imgui/imgui.h"
 	"imgui/imgui_impl_glfw_gl3.h"
+	<math.h>
 	<GL/glew.h>
 	<GLFW/glfw3.h>
 	"shader/shader_s.h"
@@ -142,7 +143,7 @@
 	<winapifamily.h>
 	<dlfcn.h>
 
-1708098693 d:\opengl\pixellab\shader\shader_s.h
+1708959701 d:\opengl\pixellab\shader\shader_s.h
 	<GL/glew.h>
 	<string>
 	<fstream>
@@ -155,7 +156,7 @@
 	<iostream>
 	<string>
 
-1708854848 source:d:\opengl\pixellab\testmain.cpp
+1709464369 source:d:\opengl\pixellab\testmain.cpp
 	"imgui/imgui.h"
 	"imgui/imgui_impl_glfw_gl3.h"
 	<GL/glew.h>
@@ -165,6 +166,7 @@
 	<iostream>
 	<windows.h>
 	<commdlg.h>
+	<math.h>
 	"fileDialog.h"
 
 1708847426 source:d:\opengl\pixellab\viewportmain.cpp
@@ -177,5 +179,18 @@
 	<iostream>
 	<windows.h>
 	<commdlg.h>
+	"fileDialog.h"
+
+1709222960 source:d:\opengl\pixellab\sliderotate.cpp
+	"imgui/imgui.h"
+	"imgui/imgui_impl_glfw_gl3.h"
+	<GL/glew.h>
+	<GLFW/glfw3.h>
+	"shader/shader_s.h"
+	"Texture.h"
+	<iostream>
+	<windows.h>
+	<commdlg.h>
+	<math.h>
 	"fileDialog.h"
 

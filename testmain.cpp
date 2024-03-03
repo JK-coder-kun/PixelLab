@@ -1,6 +1,6 @@
 #include "imgui/imgui.h"
 #include "imgui/imgui_impl_glfw_gl3.h"
-#include <math.h>
+
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include "shader/shader_s.h"
@@ -8,12 +8,12 @@
 #include <iostream>
 #include <windows.h>
 #include <commdlg.h>
-
+#include <math.h>
 #include "fileDialog.h"
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow *window);
-void setRenderCoordinate(int width, int height);
+void setRenderCoordinate(int width, int height, bool rotateFlag = false);
 
 // settings
 const unsigned int SCR_WIDTH = 800;
@@ -24,8 +24,7 @@ unsigned int windowHeight = SCR_HEIGHT;
 
 string imgPath;
 bool textureActive, newTextureSet, windowResize = false;
-float imageWidth,imageHeight, rotateRad=0.0f;
-int viewPortSize,viewPortX,viewPortY;
+int rotateCount=0,viewPortSize,viewPortX,viewPortY;
 Texture texture;
 
 float vertices[] = {
@@ -42,8 +41,12 @@ float quadVertices[] = {
          0.6f, -0.6f, 0.0f,   0.0f, 1.0f, 0.0f,   1.0f, 0.0f, // bottom right
         -0.6f, -0.6f, 0.0f,   0.0f, 0.0f, 1.0f,   0.0f, 0.0f, // bottom left
         -0.6f,  0.6f, 0.0f,   1.0f, 1.0f, 0.0f,   0.0f, 1.0f  // top left
-    };
+};
 
+//float* textureCoord[]={  &vertices[6],&vertices[7],&vertices[14],&vertices[15],&vertices[22],&vertices[23],&vertices[30],&vertices[31]};
+//float textureCorner[]={  1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f};
+
+unsigned quadVAO, quadVBO,quadEBO, VBO, VAO, EBO;
 
 int main()
 {
@@ -54,7 +57,7 @@ int main()
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
     // glfw window creation
-    GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "Pixel Lab", NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "test Lab", NULL, NULL);
     if (window == NULL)
     {
         std::cout << "Failed to create GLFW window" << std::endl;
@@ -78,21 +81,24 @@ int main()
 
     //bool show_demo_window = false;
     //bool show_another_window = false;
-    static float greyIntensity = 0.0f;
+    static float intensity = 0.0f;
     static float pixelBlocks = 0.0f;
+    static float imageRotate = 0.0f;
+    static bool themeSelected = false;
+    static int theme_current = 0;
     ImVec4 clear_color = ImVec4(0.2f, 0.3f, 0.3f, 1.0f);
 
 
     // build and compile our shader program
-    Shader ourShader("./shader/shader.vert", "./shader/shader.frag");
-    Shader screenShader("./shader/shader.vert", "./shader/shader.frag");
+    Shader ourShader("./shader/shader.vert", "./shader/test.frag");
+    Shader screenShader("./shader/test.vert", "./shader/shader.frag");
+
 
     unsigned int indices[] = {
         0, 1, 3, // first triangle
         1, 2, 3  // second triangle
     };
 
-    unsigned int VBO, VAO, EBO;
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
     glGenBuffers(1, &EBO);
@@ -134,7 +140,6 @@ int main()
     glBindFramebuffer(GL_FRAMEBUFFER,0);
 
 
-     unsigned int quadVAO, quadVBO,quadEBO;
     glGenVertexArrays(1, &quadVAO);
     glGenBuffers(1, &quadVBO);
     glGenBuffers(1, &quadEBO);
@@ -166,16 +171,18 @@ int main()
         //created framebuffer object
         glBindFramebuffer(GL_FRAMEBUFFER, fbo);
         glViewport(0,0,texture.GetWidth(),texture.GetHeight());
-        glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+        //if(rotateCount == 1 || rotateCount == 3) glViewport(0,0,texture.GetHeight(),texture.GetWidth());
+        glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
         glClear(GL_COLOR_BUFFER_BIT);
 
         if(textureActive)texture.Bind();
 
         // render container
         ourShader.use();
-        ourShader.setFloat("greyIntensity", greyIntensity);
+        ourShader.setFloat("intensity", intensity);
         ourShader.setFloat("pixelBlocks", pixelBlocks);
-        ourShader.setFloat("rotateRad", rotateRad);
+        ourShader.setFloat("rotate", imageRotate);
+        ourShader.setInt("theme", theme_current);
 
         glBindVertexArray(VAO);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
@@ -183,12 +190,11 @@ int main()
 
         // default framebuffer object
         glBindFramebuffer(GL_FRAMEBUFFER,0);
-         if(windowWidth < windowHeight) viewPortSize = windowWidth;
+        if(windowWidth < windowHeight) viewPortSize = windowWidth;
         else viewPortSize = windowHeight;
         viewPortX = (windowWidth-viewPortSize)/2;
         viewPortY = (windowHeight-viewPortSize)/2;
         glViewport(viewPortX,viewPortY,viewPortSize,viewPortSize);
-        //glViewport(0,0,windowWidth,windowHeight);
         glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
         glClear(GL_COLOR_BUFFER_BIT);
 
@@ -199,22 +205,36 @@ int main()
             ImGui::Text("Welcome to Pixel Lab!");                           // Display some text (you can use a format string too)
             if(ImGui::Button("Load Image"))
             {
-                rotateRad = 0.0f;
                 pixelBlocks = 0.0f;
-                greyIntensity = 0.0f;
+                imageRotate = 0.0f;
+                rotateCount = 0;
+                intensity = 0.0f;
                 newTextureSet = true;
                 textureActive = true;
             }
             if(ImGui::Button("Rotate"))
             {
-                rotateRad += M_PI/2;
-                std::swap(imageWidth,imageHeight);
-                setRenderCoordinate(imageWidth,imageHeight);
-                glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
-                glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), quadVertices, GL_STATIC_DRAW);
+                imageRotate += M_PI/2;
+                rotateCount += 1;
+                if(rotateCount == 4)
+                {
+                    rotateCount = 0;
+                    imageRotate = 0.0f;
+                }
+                std::cout<<"angle: "<<imageRotate<<std::endl;
+                if(rotateCount == 0 || rotateCount == 2)setRenderCoordinate(texture.GetWidth(),texture.GetHeight());
+                else setRenderCoordinate(texture.GetHeight(),texture.GetWidth() , true);
             }
             ImGui::SliderFloat("Pixel Blocks", &pixelBlocks, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
-            ImGui::SliderFloat("GreyScale", &greyIntensity, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
+            ImGui::NewLine();
+            ImGui::MenuItem("Choose Theme",NULL,&themeSelected);
+            if(themeSelected)
+            {
+                const char* listbox_theme[] = {"None", "Grey","Theme1","Theme2" };
+                ImGui::ListBox("select one", &theme_current, listbox_theme, IM_ARRAYSIZE(listbox_theme), 3);
+            }
+            ImGui::NewLine();
+            ImGui::SliderFloat("GreyScale", &intensity, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
             ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
 
 
@@ -243,12 +263,10 @@ int main()
         {
             imgPath = openFileDialog();
             texture.LoadTexture(imgPath);
-            imageWidth = texture.GetWidth();
-            imageHeight= texture.GetHeight();
-            setRenderCoordinate(imageWidth, imageHeight);
-            glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
-            glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), quadVertices, GL_STATIC_DRAW);
+
+            setRenderCoordinate(texture.GetWidth(), texture.GetHeight());
             newTextureSet = false;
+            imageRotate = 0.0f;
 
             //regenerate fbo to renew width and height of the texture that is attached to fbo
             glDeleteFramebuffers(1,&fbo);
@@ -274,17 +292,20 @@ int main()
 
         if(textureActive && windowResize)
         {
-            setRenderCoordinate(imageWidth,imageHeight);
+            setRenderCoordinate(texture.GetWidth(), texture.GetHeight());
             glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
             glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), quadVertices, GL_STATIC_DRAW);
             windowResize = false;
         }
 
-        screenShader.use();
+
         //container to render our created fbo
+        screenShader.use();
+        screenShader.setFloat("rotate", imageRotate);
         glBindVertexArray(quadVAO);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, fbo_texture);	// use the color attachment texture as the texture of the quad plane
+
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
         ImGui::Render();
@@ -312,7 +333,7 @@ int main()
 }
 
 //set quad coordinate to match image ratio
-void ssetRenderCoordinate(int width, int height)
+void setRenderCoordinate(int width, int height, bool rotateFlag )
 {
     float initialCoord[] = {
         // positions          // colors           // texture coords
@@ -323,50 +344,16 @@ void ssetRenderCoordinate(int width, int height)
     };
     std::copy(initialCoord, initialCoord+sizeof(initialCoord)/sizeof(initialCoord[0]), quadVertices);
 
+    //float winWHRatio = (float)windowWidth/(float)windowHeight;
+    //float winHWRatio = (float)windowHeight/(float)windowWidth;
+    //float winRatio;
     //if image width is greater, set quad width default and adjust height
     if(width >= height)
     {
-        float winHWRatio = (float)windowWidth/(float)windowHeight;
-        float hwRatio = (float)1.2f * winHWRatio* ((float)height/(float)width);
-        std::cout<<"WinHW: "<<winHWRatio<<std::endl;
-        std::cout<<"width: "<<width<<", height: "<<height<<", hwRatio: "<<hwRatio/1.2f<<std::endl;
-        quadVertices[1]=0 + hwRatio/2;
-        quadVertices[25]=quadVertices[1];
-        quadVertices[9]= 0 - hwRatio/2;
-        quadVertices[17] = quadVertices[9];
-        std::cout<<"width: "<<(quadVertices[0]-quadVertices[16])<<", height: "<<(quadVertices[1]-quadVertices[9])<<", hwRatio: "<<(quadVertices[1]-quadVertices[9])/(quadVertices[0]-quadVertices[16])<<std::endl;
-
-
-    }else  //if image height is greater, set quad height default and adjust width
-    {
-        float winWHRatio = (float)windowHeight/(float)windowWidth;
-        float whRatio = (float)1.2f * winWHRatio*((float)width/(float)height);
-        std::cout<<"WinWH: "<<winWHRatio<<std::endl;
-        std::cout<<"width: "<<width<<", height: "<<height<<", whRatio: "<<whRatio/1.2f<<std::endl;
-        quadVertices[0] = 0 + whRatio/2;
-        quadVertices[8] = quadVertices[0];
-        quadVertices[16]= 0 - whRatio/2;
-        quadVertices[24]= quadVertices[16];
-        std::cout<<"width: "<<(quadVertices[0]-quadVertices[16])<<", height: "<<(quadVertices[1]-quadVertices[9])<<", whRatio: "<<(quadVertices[0]-quadVertices[16])/(quadVertices[1]-quadVertices[9])<<std::endl;
-
-    }
-}
-
-void setRenderCoordinate(int width, int height)
-{
-    float initialCoord[] = {
-        // positions          // colors           // texture coords
-         0.6f,  0.6f, 0.0f,   1.0f, 0.0f, 0.0f,   1.0f, 1.0f, // top right
-         0.6f, -0.6f, 0.0f,   0.0f, 1.0f, 0.0f,   1.0f, 0.0f, // bottom right
-        -0.6f, -0.6f, 0.0f,   0.0f, 0.0f, 1.0f,   0.0f, 0.0f, // bottom left
-        -0.6f,  0.6f, 0.0f,   1.0f, 1.0f, 0.0f,   0.0f, 1.0f  // top left
-    };
-    std::copy(initialCoord, initialCoord+sizeof(initialCoord)/sizeof(initialCoord[0]), quadVertices);
-
-    //if image width is greater, set quad width default and adjust height
-    if(width >= height)
-    {
+        //winRatio = winWHRatio;
+        //if(rotateFlag) winRatio = winHWRatio;
         float hwRatio = (float)1.2f * ((float)height/(float)width);
+        //std::cout<<"WinHW: "<<winRatio<<std::endl;
         std::cout<<"width: "<<width<<", height: "<<height<<", hwRatio: "<<hwRatio<<std::endl;
         quadVertices[1]=0 + hwRatio/2;
         quadVertices[25]=quadVertices[1];
@@ -376,7 +363,10 @@ void setRenderCoordinate(int width, int height)
 
     }else  //if image height is greater, set quad height default and adjust width
     {
+        //winRatio = winHWRatio;
+        //if(rotateFlag) winRatio = winWHRatio;
         float whRatio = (float)1.2f *((float)width/(float)height);
+        //std::cout<<"WinWH: "<<winRatio<<std::endl;
         std::cout<<"width: "<<width<<", height: "<<height<<", whRatio: "<<whRatio<<std::endl;
         quadVertices[0] = 0 + whRatio/2;
         quadVertices[8] = quadVertices[0];
@@ -385,6 +375,8 @@ void setRenderCoordinate(int width, int height)
         std::cout<<"width: "<<(quadVertices[0]-quadVertices[16])<<", height: "<<(quadVertices[1]-quadVertices[9])<<", whRatio: "<<(quadVertices[0]-quadVertices[16])/(quadVertices[1]-quadVertices[9])<<std::endl;
 
     }
+    glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), quadVertices, GL_STATIC_DRAW);
 }
 
 // process all input: query GLFW whether relevant keys are pressed/released this frame and react accordingly
@@ -406,5 +398,6 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
     windowResize = true;
 
 }
+
 
 

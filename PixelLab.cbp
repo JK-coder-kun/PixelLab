@@ -47,19 +47,30 @@
 		<Unit filename="imgui/stb_rect_pack.h" />
 		<Unit filename="imgui/stb_textedit.h" />
 		<Unit filename="imgui/stb_truetype.h" />
-		<Unit filename="main.cpp">
-			<Option target="Release" />
-		</Unit>
-		<Unit filename="shader/pixelize.frag" />
+		<Unit filename="main.cpp" />
 		<Unit filename="shader/shader.frag" />
 		<Unit filename="shader/shader.vert" />
 		<Unit filename="shader/shader_s.h" />
-		<Unit filename="shader/test.frag" />
-		<Unit filename="shader/test.vert" />
+		<Unit filename="shader/test.frag">
+			<Option target="Release" />
+		</Unit>
+		<Unit filename="shader/test.vert">
+			<Option target="Release" />
+		</Unit>
+		<Unit filename="shader/toon.frag">
+			<Option target="Release" />
+		</Unit>
+		<Unit filename="shader/toonify.frag">
+			<Option target="Release" />
+		</Unit>
+		<Unit filename="slideRotate.cpp">
+			<Option target="Release" />
+		</Unit>
 		<Unit filename="stb_image.h" />
 		<Unit filename="stb_image_write.h" />
-		<Unit filename="testmain.cpp" />
-		<Unit filename="viewportmain.cpp" />
+		<Unit filename="testmain.cpp">
+			<Option target="Release" />
+		</Unit>
 		<Extensions>
 			<lib_finder disable_auto="1" />
 		</Extensions>
