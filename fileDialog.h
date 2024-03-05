@@ -27,7 +27,7 @@ string openFileDialog()
     ofn.lpstrInitialDir = "D:";
     ofn.lpstrFile = szFile;
     ofn.nMaxFile = MAX_PATH;
-    ofn.lpstrFilter = "Supported Files(*.png, *.jpg, *.jpeg, *.gif)\0*.png;*.jpg;*.jpeg;*.gif\0";
+    ofn.lpstrFilter = "Supported Files(*.png, *.jpg, *.jpeg)\0*.png;*.jpg;*.jpeg\0";
     ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
     if(GetOpenFileName(&ofn))
     {

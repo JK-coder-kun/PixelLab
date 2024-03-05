@@ -165,7 +165,8 @@ int main()
 
         //created framebuffer object
         glBindFramebuffer(GL_FRAMEBUFFER, fbo);
-        glViewport(0,0,texture.GetWidth(),texture.GetHeight());
+        //glViewport(0,0,texture.GetWidth(),texture.GetHeight());
+        glViewport(0,0,imageWidth,imageHeight);
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
@@ -199,9 +200,6 @@ int main()
             ImGui::Text("Welcome to Pixel Lab!");                           // Display some text (you can use a format string too)
             if(ImGui::Button("Load Image"))
             {
-                rotateRad = 0.0f;
-                pixelBlocks = 0.0f;
-                greyIntensity = 0.0f;
                 newTextureSet = true;
                 textureActive = true;
             }
@@ -212,6 +210,25 @@ int main()
                 setRenderCoordinate(imageWidth,imageHeight);
                 glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
                 glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), quadVertices, GL_STATIC_DRAW);
+                glDeleteFramebuffers(1,&fbo);
+            glDeleteTextures(1,&fbo_texture);
+
+            glGenFramebuffers(1,&fbo);
+            glBindFramebuffer(GL_FRAMEBUFFER,fbo);
+
+            glGenTextures(1, &fbo_texture); // Generate one texture
+            glBindTexture(GL_TEXTURE_2D, fbo_texture); // Bind the texture fbo_texture
+
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, imageWidth, imageHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL); // Create a standard texture with the width and height of our window
+
+            // Setup the basic texture parameters
+            glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+            glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+
+            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, fbo_texture, 0);
+            glBindFramebuffer(GL_FRAMEBUFFER,0);
             }
             ImGui::SliderFloat("Pixel Blocks", &pixelBlocks, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
             ImGui::SliderFloat("GreyScale", &greyIntensity, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
@@ -225,7 +242,7 @@ int main()
                 {
                     string path = convertToString(szFile, MAX_PATH) + ".png";
                     glBindFramebuffer(GL_FRAMEBUFFER,fbo);
-                    bool success = Texture::SaveAsImage(path,0,0,texture.GetWidth(), texture.GetHeight());
+                    bool success = Texture::SaveAsImage(path,0,0,imageWidth, imageHeight);
                     if(!success) std::cout<<"Unable to save image"<<std::endl;
                     else std::cout<<"Image has been saved!"<<std::endl;
                     glBindFramebuffer(GL_FRAMEBUFFER,0);
@@ -242,6 +259,14 @@ int main()
         if(newTextureSet)
         {
             imgPath = openFileDialog();
+            if(imgPath == "Unable to get dir")
+            {
+                newTextureSet=false;
+                goto noNewTexture;
+            }
+            rotateRad = 0.0f;
+            pixelBlocks = 0.0f;
+            greyIntensity = 0.0f;
             texture.LoadTexture(imgPath);
             imageWidth = texture.GetWidth();
             imageHeight= texture.GetHeight();
@@ -271,6 +296,7 @@ int main()
             glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, fbo_texture, 0);
             glBindFramebuffer(GL_FRAMEBUFFER,0);
         }
+        noNewTexture:
 
         if(textureActive && windowResize)
         {
