@@ -157,6 +157,8 @@ int main()
     glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
     glEnableVertexAttribArray(2);
 
+    int guiWidth,guiHeight,guiDiagon,prevDiagon;
+
     // render loop
     while (!glfwWindowShouldClose(window))
     {
@@ -197,7 +199,20 @@ int main()
         ImGui_ImplGlfwGL3_NewFrame();
         {   ImGui::Begin("Menu");
             ImGui::SetWindowPos(ImVec2(10,10),ImGuiCond_FirstUseEver);
-            ImGui::Text("Welcome to Pixel Lab!");                           // Display some text (you can use a format string too)
+            ImGui::Text("Welcome to Pixel Lab!");
+                                      // Display some text (you can use a format string too)
+            guiWidth=ImGui::GetWindowWidth();
+            guiHeight=ImGui::GetWindowHeight();
+            guiDiagon= sqrt((guiWidth*guiWidth)+(guiHeight*guiHeight));
+            if(guiDiagon != prevDiagon)
+            {
+                prevDiagon = guiDiagon;
+                ImGui::GetFont()->Scale = 0.6+guiDiagon*0.0015;
+                //std::cout<<ImGui::GetFont()->Scale;
+                ImGui::PushFont(ImGui::GetFont());
+                ImGui::PopFont();
+            }
+
             if(ImGui::Button("Load Image"))
             {
                 newTextureSet = true;
